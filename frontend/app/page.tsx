@@ -2,6 +2,18 @@
 import { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
+interface Notification {
+  id?: string;
+  type: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}
+
+type MessageType = 'like' | 'comment' | 'follow' | 'mention';
+
+type Messages = Record<MessageType, string>;
+
 export default function Home() {
   const [notifications, setNotifications] = useState([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,17 +33,18 @@ export default function Home() {
     newSocket.emit('subscribe', userId);
     newSocket.on('new-notification', (notification) => {
       console.log('Received new notification:', notification);
+      // @ts-expect-error: Argument of type '(prev: never[]) => any[]' is not assignable to parameter of type 'SetStateAction<never[]>'
       setNotifications(prev => [notification, ...prev]);
     });
-
+    // @ts-expect-error: Argument of type 'Socket<DefaultEventsMap, DefaultEventsMap>' is not assignable to parameter of type 'SetStateAction<null>'
     setSocket(newSocket);
 
-    return () => newSocket.close();
-  }, [userId]);
+    return () => { newSocket.close(); }
+  }, [userId, apiBaseUrl, socketUrl]);
 
   const triggerTestNotification = () => {
-    const types = ['like', 'comment', 'follow', 'mention'];
-    const messages = {
+    const types: MessageType[] = ['like', 'comment', 'follow', 'mention'];
+    const messages: Messages = {
       like: 'liked your post "Urban Design Trends"',
       comment: 'commented: "Great perspective!" on your article',
       follow: 'started following you',
@@ -69,7 +82,7 @@ export default function Home() {
       </button>
 
       <div style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
-        {notifications.map((n, i) => (
+        {notifications.map((n: Notification, i) => (
           <div
             key={n.id || i}
             style={{
