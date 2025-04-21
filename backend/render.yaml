@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: insyd-notifications-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://your-frontend-domain.com
+    healthCheckPath: /health

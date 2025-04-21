@@ -1,31 +1,62 @@
-// server.js
+// index.js (updated backend)
+
+require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 4000;
+
+// Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cors());
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "*"
+        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        methods: ['GET', 'POST']
     }
 });
 
-// In-memory storage
-const notifications = {};
-const users = {
-    'user1': { name: 'Architect One' },
-    'user2': { name: 'Designer Two' }
-};
+class NotificationStore {
+    constructor() {
+        this.notifications = {};
+    }
 
-// Initialize notifications for each user
-Object.keys(users).forEach(userId => {
-    notifications[userId] = [];
-});
+    getNotifications(userId) {
+        return this.notifications[userId] || [];
+    }
+
+    addNotification(notificationData) {
+        // Validate required fields
+        if (!notificationData || !notificationData.userId || !notificationData.type || !notificationData.content) {
+            throw new Error('Missing required notification fields');
+        }
+
+        const { userId, type, content } = notificationData;
+
+        if (!this.notifications[userId]) {
+            this.notifications[userId] = [];
+        }
+
+        const newNotification = {
+            id: Date.now().toString(),
+            userId,
+            type,
+            content,
+            read: false,
+            createdAt: new Date().toISOString()
+        };
+
+        this.notifications[userId].unshift(newNotification);
+        return newNotification;
+    }
+}
+
+const store = new NotificationStore();
 
 // WebSocket connection
 io.on('connection', (socket) => {
@@ -38,53 +69,35 @@ io.on('connection', (socket) => {
 });
 
 // API endpoints
-app.get('/notifications/:userId', (req, res) => {
-    const userNotifications = notifications[req.params.userId] || [];
-    res.json(userNotifications.slice(0, 20)); // Return latest 20
-});
-
 app.post('/notifications', (req, res) => {
-    const { userId, type, content } = req.body;
+    try {
+        // Validate request body exists
+        if (!req.body) {
+            return res.status(400).json({ error: 'Request body is missing' });
+        }
 
-    if (!notifications[userId]) {
-        notifications[userId] = [];
+        const notification = store.addNotification(req.body);
+
+        // Send real-time update
+        io.to(notification.userId).emit('new-notification', notification);
+
+        res.status(201).json(notification);
+    } catch (error) {
+        console.error('Error creating notification:', error.message);
+        res.status(400).json({ error: error.message });
     }
-
-    const newNotification = {
-        id: Date.now().toString(),
-        userId,
-        type,
-        content,
-        read: false,
-        createdAt: new Date().toISOString()
-    };
-
-    notifications[userId].unshift(newNotification); // Add to beginning
-
-    // Send real-time update
-    io.to(userId).emit('new-notification', newNotification);
-    res.status(201).json(newNotification);
 });
 
-// Seed some initial notifications
-notifications['user1'] = [
-    {
-        id: '1',
-        userId: 'user1',
-        type: 'follow',
-        content: 'Designer Two started following you',
-        read: false,
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: '2',
-        userId: 'user1',
-        type: 'like',
-        content: 'Designer Two liked your post "Modern Facades"',
-        read: true,
-        createdAt: new Date(Date.now() - 3600000).toISOString()
+app.get('/notifications/:userId', (req, res) => {
+    try {
+        const notifications = store.getNotifications(req.params.userId);
+        res.json(notifications.slice(0, 20)); // Return latest 20
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-];
-const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+});
 
+httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

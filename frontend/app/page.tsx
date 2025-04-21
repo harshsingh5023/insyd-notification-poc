@@ -4,17 +4,20 @@ import io from 'socket.io-client';
 
 export default function Home() {
   const [notifications, setNotifications] = useState([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [socket, setSocket] = useState(null);
   const [userId] = useState('user1'); // Hardcoded for POC
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
+  const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:4000';
 
   useEffect(() => {
     // Fetch initial notifications
-    fetch(`http://localhost:3001/notifications/${userId}`)
+    fetch(`${apiBaseUrl}/notifications/${userId}`)
       .then(res => res.json())
       .then(data => setNotifications(data));
 
     // Set up WebSocket connection
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io(socketUrl);
     newSocket.emit('subscribe', userId);
     newSocket.on('new-notification', (notification) => {
       console.log('Received new notification:', notification);
@@ -36,7 +39,7 @@ export default function Home() {
     };
     const type = types[Math.floor(Math.random() * types.length)];
 
-    fetch('http://localhost:3001/notifications', {
+    fetch(`${apiBaseUrl}/notifications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
