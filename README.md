@@ -21,7 +21,6 @@ A real-time notification system built with Node.js, Express, and Socket.IO that 
 
 ## 💻 Installation
 
-\`\`\`bash
 # Clone the repository
 git clone [[your-repository-url](https://github.com/harshsingh5023/insyd-notification-poc)]
 
@@ -55,8 +54,5 @@ NEXT_PUBLIC_WEBSOCKET_URL=somw-url
 ### Starting the frontend
 
 npm run dev
-
-
-\`\`\`
 
 
