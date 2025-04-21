@@ -22,7 +22,7 @@ A real-time notification system built with Node.js, Express, and Socket.IO that 
 ## 💻 Installation
 
 # Clone the repository
-git clone [[your-repository-url](https://github.com/harshsingh5023/insyd-notification-poc)]
+git clone [https://github.com/harshsingh5023/insyd-notification-poc]
 
 # Navigate to the project directory
 cd backend
