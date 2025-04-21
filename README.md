@@ -32,18 +32,13 @@ cd backend
 npm install
 
 # ⚙️ Environment Variables for backend
-\`\`\`
-PORT=4000
 CORS_ORIGIN=some-url
-\`\`\`
 
 # Create .env file and configure environment variables
 cp .env.example .env
 
 ### Starting the Server
-\`\`\`bash
 node index.js
-\`\`\`
 
 # Navigate to the frontend part
 cd frontend
@@ -52,22 +47,16 @@ cd frontend
 npm install
 
 # ⚙️ Environment Variables for frontend
-\`\`\`
+
 NEXT_PUBLIC_API_BASE_URL=some-url
 NEXT_PUBLIC_WEBSOCKET_URL=somw-url
-\`\`\`
+
 
 ### Starting the frontend
-\`\`\`bash
+
 npm run dev
-\`\`\`
+
 
 \`\`\`
 
-## 🚀 Usage
-
-### Starting the Server
-\`\`\`bash
-npm start
-\`\`\`
 
